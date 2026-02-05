@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RiskXLabs — Transaction Velocity Quiz</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <div class="shield"></div>
+        <div class="flask"></div>
+        <div class="xmark">X</div>
+      </div>
+      <div class="brand-text">
+        <div class="brand-title">RiskXLabs</div>
+        <div class="brand-subtitle">Transaction Velocity Quiz — Outgoing Wires</div>
+      </div>
+    </div>
+
+    <button id="btnSettings" class="btn ghost" title="Settings">
+      Settings
+    </button>
+  </header>
+
+  <main class="container">
+    <section id="screenSetup" class="card">
+      <h1 class="h1">Configure quiz</h1>
+      <p class="muted">
+        Identify whether each wire pattern represents a <span class="accent">velocity concern</span>.
+        Destinations that are <span class="warn">international</span> and/or <span class="warn">crypto platforms</span> are considered higher risk.
+      </p>
+
+      <div class="row">
+        <div class="field">
+          <label class="label">Number of questions</label>
+          <div class="segmented" role="group" aria-label="Number of questions">
+            <button class="seg" data-qcount="3">3</button>
+            <button class="seg" data-qcount="5">5</button>
+            <button class="seg" data-qcount="10">10</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Voice</label>
+          <div class="pill">
+            OpenAI TTS (server proxy) <span class="muted">• fallback: browser voice</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row right">
+        <button id="btnStart" class="btn primary" disabled>Start quiz</button>
+      </div>
+    </section>
+
+    <section id="screenQuiz" class="card hidden">
+      <div class="quiz-head">
+        <div>
+          <div class="kicker">Question <span id="qIndex">1</span> of <span id="qTotal">3</span></div>
+          <h2 id="scenarioTitle" class="h2">Scenario</h2>
+        </div>
+        <div class="badges" id="riskBadges"></div>
+      </div>
+
+      <div class="scenario-meta" id="scenarioMeta"></div>
+
+      <div class="timeline">
+        <div class="timeline-head">
+          <div class="th">Date</div>
+          <div class="th amt">Amount</div>
+          <div class="th">Destination</div>
+          <div class="th">Type</div>
+          <div class="th">Country</div>
+        </div>
+        <div id="timelineRows"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="question">
+        <div class="prompt">Does this pattern represent a transaction velocity concern?</div>
+        <div class="choices">
+          <button id="btnConcern" class="btn danger">Yes — Velocity Concern</button>
+          <button id="btnNoConcern" class="btn success">No — Normal Activity</button>
+        </div>
+      </div>
+
+      <div class="why">
+        <div class="label">Why? (optional — improves scorecard feedback)</div>
+        <div id="whyChips" class="chip-grid"></div>
+      </div>
+    </section>
+
+    <section id="screenDebrief" class="card hidden">
+      <div class="quiz-head">
+        <div>
+          <div class="kicker">Debrief</div>
+          <h2 class="h2" id="debriefHeader">Result</h2>
+        </div>
+        <div class="badges" id="debriefBadges"></div>
+      </div>
+
+      <div class="debrief-body">
+        <div id="debriefText" class="debrief-text"></div>
+
+        <div class="debrief-actions">
+          <button id="btnPlayVoice" class="btn ghost">Play AI voice</button>
+          <button id="btnNext" class="btn primary">Next question</button>
+        </div>
+        <div class="muted small">
+          Disclosure: The narration is AI-generated.
+        </div>
+      </div>
+    </section>
+
+    <section id="screenScorecard" class="card hidden">
+      <div class="score-head">
+        <div>
+          <div class="kicker">RiskXLabs Velocity Scorecard</div>
+          <h2 class="h2">Performance Summary</h2>
+        </div>
+        <div class="score-pill">
+          <div class="score-num" id="finalScore">0</div>
+          <div class="score-den">/ 100</div>
+        </div>
+      </div>
+
+      <div class="kpis" id="kpis"></div>
+
+      <div class="grid2">
+        <div class="card inner">
+          <div class="inner-title">Breakdown</div>
+          <div id="breakdownBars" class="bars"></div>
+        </div>
+        <div class="card inner">
+          <div class="inner-title">Written feedback</div>
+          <div id="writtenFeedback" class="feedback"></div>
+        </div>
+      </div>
+
+      <div class="card inner">
+        <div class="inner-title">Question review</div>
+        <div id="reviewTable" class="review"></div>
+      </div>
+
+      <div class="row right">
+        <button id="btnRestart" class="btn ghost">Restart</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Settings modal -->
+  <div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <div class="kicker">Settings</div>
+          <div id="settingsTitle" class="h2">Voice</div>
+        </div>
+        <button id="btnCloseSettings" class="btn ghost">Close</button>
+      </div>
+      <div class="modal-body">
+        <p class="muted">
+          This demo uses a server-side proxy to call OpenAI TTS. Configure your API key in <code>server/.env</code>.
+          If not configured, the app will attempt browser SpeechSynthesis (if available).
+        </p>
+        <div class="field">
+          <label class="label">Preferred voice instruction</label>
+          <input id="voiceInstruction" class="input" value="Calm, confident, professional British tone; senior risk analyst." />
+          <div class="muted small">Used as the <code>instructions</code> parameter for OpenAI TTS.</div>
+        </div>
+        <div class="field">
+          <label class="label">OpenAI voice</label>
+          <select id="openaiVoice" class="select">
+            <option value="marin" selected>marin (recommended)</option>
+            <option value="cedar">cedar (recommended)</option>
+            <option value="alloy">alloy</option>
+            <option value="coral">coral</option>
+            <option value="nova">nova</option>
+            <option value="sage">sage</option>
+            <option value="shimmer">shimmer</option>
+            <option value="verse">verse</option>
+          </select>
+          <div class="muted small">Voices are built-in OpenAI TTS voices.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
